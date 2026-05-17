@@ -1,24 +1,68 @@
-package com.example;
+package com.example.pearlcatch;
+                List<EnderPearlEntity> pearls =
+                        serverWorld.getEntitiesByClass(
+                                EnderPearlEntity.class,
+                                searchBox,
+                                entity -> true
+                        );
 
-import net.fabricmc.api.ModInitializer;
+                for (EnderPearlEntity pearl : pearls) {
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+                    Entity owner = windCharge.getOwner();
 
-public class ExampleMod implements ModInitializer {
-	public static final String MOD_ID = "modid";
+                    if (!(owner instanceof ServerPlayerEntity catcher)) {
+                        continue;
+                    }
 
-	// This logger is used to write text to the console and the log file.
-	// It is considered best practice to use your mod id as the logger's name.
-	// That way, it's clear which mod wrote info, warnings, and errors.
-	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+                    Vec3d pearlPos = pearl.getPos();
+                    Vec3d pearlVelocity = pearl.getVelocity();
 
-	@Override
-	public void onInitialize() {
-		// This code runs as soon as Minecraft is in a mod-load-ready state.
-		// However, some things (like resources) may still be uninitialized.
-		// Proceed with mild caution.
+                    catcher.teleport(
+                            serverWorld,
+                            pearlPos.x,
+                            pearlPos.y,
+                            pearlPos.z,
+                            java.util.Set.of(),
+                            catcher.getYaw(),
+                            catcher.getPitch(),
+                            true
+                    );
 
-		LOGGER.info("Hello Fabric world!");
-	}
+                    catcher.setVelocity(
+                            pearlVelocity.multiply(MOMENTUM_MULTIPLIER)
+                    );
+
+                    catcher.velocityModified = true;
+
+                    serverWorld.spawnParticles(
+                            ParticleTypes.CLOUD,
+                            pearlPos.x,
+                            pearlPos.y,
+                            pearlPos.z,
+                            20,
+                            0.2,
+                            0.2,
+                            0.2,
+                            0.02
+                    );
+
+                    serverWorld.playSound(
+                            null,
+                            pearlPos.x,
+                            pearlPos.y,
+                            pearlPos.z,
+                            SoundEvents.ENTITY_ENDERMAN_TELEPORT,
+                            SoundCategory.PLAYERS,
+                            1.0f,
+                            1.2f
+                    );
+
+                    pearl.discard();
+                    windCharge.discard();
+
+                    break;
+                }
+            }
+        });
+    }
 }
